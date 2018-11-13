@@ -5,11 +5,11 @@ import React from 'react';
 import $ from 'jquery';
 import { Calendar } from 'fullcalendar';
 import 'moment/locale/ko';
-// import moment from 'moment';
 
 import { Button, Modal, ModalHeader, ModalBody, ModalFooter } from 'reactstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '../node_modules/fullcalendar/dist/fullcalendar.min.css';
+
 
 class FullCalendar extends React.Component {
 		constructor(props) {
@@ -21,8 +21,8 @@ class FullCalendar extends React.Component {
 					{
 						id: 1,
 						title: '테헤란로',
-						start: "2018-11-01T10:00",
-						end: "2018-11-01T14:00"
+						start: "2018-11-14T10:00",
+						end: "2018-11-14T14:00"
 					},
 					{
 						id: 2,
@@ -35,6 +35,8 @@ class FullCalendar extends React.Component {
 					id: '',
 					title: '',
 					start: '',
+					startTime: '',
+					endTime: '',
 					date: '',
 					end: ''
 				},
@@ -59,10 +61,25 @@ class FullCalendar extends React.Component {
 		}
 
 		inputHandler(e) {
-			if (e.target.id === 'inputName') { 
+			const id = this.state.events.map(event => event.id);
+			const maxId = this.state.events.length === 0 ? 1 : Math.max(...id) + 1;
+
+			if (e.target.id === 'inputDate') { 
+				const inputDate = e.target.value;
+				this.setState({
+					nowEvent: {
+						id: this.state.nowEvent.id,
+						date: inputDate,
+						title: this.state.nowEvent.title,
+						start: inputDate + this.state.nowEvent.startTime,
+						end: inputDate + this.state.nowEvent.endTime
+					}
+				})
+			} else if (e.target.id === 'inputName') { 
 				const inputName = e.target.value;
 				this.setState({
 					nowEvent: {
+						id: maxId,
 						date: this.state.nowEvent.date,
 						title: inputName,
 						start: this.state.nowEvent.start,
@@ -73,6 +90,7 @@ class FullCalendar extends React.Component {
 				const startTime = e.target.value
 				this.setState({
 					nowEvent: {
+						id: this.state.nowEvent.id,
 						date: this.state.nowEvent.date,
 						title: this.state.nowEvent.title,
 						start: this.state.nowEvent.date + 'T' + startTime,
@@ -83,6 +101,7 @@ class FullCalendar extends React.Component {
 				const endTime = e.target.value
 				this.setState({
 					nowEvent: {
+						id: this.state.nowEvent.id,
 						title: this.state.nowEvent.title,
 						date: this.state.nowEvent.date,
 						start: this.state.nowEvent.start,
@@ -103,14 +122,14 @@ class FullCalendar extends React.Component {
 			}
 		}
 		
-		movedEvent(inputTitle, startTime, endTime, id) {
+		movedEvent(event) {
 			this.setState({
 				events: this.state.events.concat(
 					{
-						id: id,
-						title : inputTitle,
-						start : startTime,
-						end : endTime
+						id: event.id,
+						title : event.title,
+						start : event.start.format(),
+						end : event.end.format()
 					}
 				)
 			})
@@ -119,17 +138,41 @@ class FullCalendar extends React.Component {
 		}
 		
 		addEvent() {
-			let id = this.state.events.map(event => event.id);
-			let maxId = this.state.events.length === 0 ? 1 : Math.max(...id) + 1;
+			const id = this.state.events.map(event => event.id);
+			const checkId = this.state.events.map(event => event.id).indexOf(this.state.nowEvent.id);
+			const maxId = this.state.events.length === 0 ? 1 : checkId === -1 ? Math.max(...id) + 1 : this.state.nowEvent.id;
 			
-			this.setState({ 
-				events: this.state.events.concat(
-					{
-						id: maxId,
-						title: this.state.nowEvent.title,
-						start: this.state.nowEvent.start,
-						end: this.state.nowEvent.end
+			if(checkId !== -1) {
+				const newEvent = this.state.events.filter((event) => { return event.id !== this.state.nowEvent.id; });
+				console.log(newEvent);
+				this.calendarView.removeEventSources(event);
+				this.setState({ 
+					events: newEvent.concat(
+						{
+							id: this.state.nowEvent.id,
+							title: this.state.nowEvent.title,
+							start: this.state.nowEvent.start,
+							end: this.state.nowEvent.end
+						}
+					),
+					nowEvent: {
+						id: '',
+						title: '',
+						start: '',
+						date: '',
+						end: ''
 					}
+				});
+				this.calendarView.addEventSource(this.state.events);
+			} else {
+				this.setState({ 
+					events: this.state.events.concat(
+						{
+							id: maxId,
+							title: this.state.nowEvent.title,
+							start: this.state.nowEvent.start,
+							end: this.state.nowEvent.end
+						}
 					),
 					nowEvent: {
 						id: '',
@@ -139,6 +182,7 @@ class FullCalendar extends React.Component {
 						end: ''
 					}
 				})
+			}
 				this.submit();
 				this.toggle();
 		}
@@ -149,7 +193,7 @@ class FullCalendar extends React.Component {
 				});
 			const remove = confirm('일정을 삭제하시겠습니까?');
 			if(remove) {
-				this.calendarView.removeEvents(event);
+				this.calendarView.removeEventSources(event);
 				this.setState({ 
 					events: newEvent,
 					nowEvent: {
@@ -168,16 +212,16 @@ class FullCalendar extends React.Component {
 			}
 		}
 
-		nowEvent(event, date, startTime, endTime) {
+		nowEvent(event) {
 			this.setState({
 				nowEvent: {
 					id: event.id,
 					title: event.title,
-					start: date + 'T' + startTime,
-					date: date,
-					startTime: startTime,
-					endTime: endTime,
-					end: date + 'T' + endTime
+					start: event.start.format(),
+					date: event.start.format('YYYY-MM-DD'),
+					startTime: event.start.format('HH:mm'),
+					endTime: event.end.format('HH:mm'),
+					end: event.end.format()
 				}
 			})
 		}
@@ -201,7 +245,8 @@ class FullCalendar extends React.Component {
 							<div id="modalView">
         			<Modal isOpen={this.state.modal} toggle={this.toggle}>
 								<ModalHeader> 
-									{this.state.nowEvent.date} <br/><br/> 
+									<label htmlFor="inputDate" className="col-form-label">날짜</label>
+									<input type="text" className="form-control" id="inputDate" onChange={this.inputHandler} placeholder="ex)2018-10-13" defaultValue={this.state.nowEvent.date} />
 									<label htmlFor="inputName" className="col-form-label">오피스명</label>
             			<input type="text" className="form-control" id="inputName" onChange={this.inputHandler} defaultValue={this.state.nowEvent.title} />
 								</ModalHeader>
@@ -230,6 +275,7 @@ class FullCalendar extends React.Component {
 				schedulerLicenseKey: 'CC-Attribution-NonCommercial-NoDerivatives',
 				themeSystem: 'bootstrap4',
 				locale: 'ko',
+				defaultView: 'month',
 				nowIndicator: true,
 				displayEventTime: true,
 				editable: true,
@@ -237,12 +283,10 @@ class FullCalendar extends React.Component {
 				eventColor: '#007BFF',
 				eventTextColor: '#FFF',
 				selectable: true,
-				showNonCurrentDates: false,
+				showNonCurrentDates: true,
 				navLinks: true,
 				timeFormat: 'HH:mm',
-				events: (start,end, timezone, callback) => {
-					callback(this.state.events);
-				},	
+				events: this.state.events,	
 				eventOverlap: false,
 				buttonText: {
 					today:    '오늘',
@@ -266,7 +310,7 @@ class FullCalendar extends React.Component {
 				header: {
 					left: 'prev,today,next prevYear,nextYear',
 					center: 'title',
-					right: 'month,agendaWeek,agendaDay listYear',
+					right: 'month,agendaWeek listYear',
 				},
 				views: {
 					month: {
@@ -283,21 +327,14 @@ class FullCalendar extends React.Component {
 					
 				},
 				eventClick: (event) => {
-					console.log(event.id);
-					const startTime = event.start.format('HH:mm');
-					const endTime = event.end.format('HH:mm');
-					const date = event.start.format('YYYY-MM-DD');
-					this.nowEvent(event, date, startTime, endTime);
+					this.nowEvent(event);
 					this.toggle();
 				},
 
 				eventDrop: (event, delta, revertFunc) => {
-					const startTime = event.start.format();
-					const endTime = event.end.format();
-					const id = event.id
 					if (confirm('일정을 변경 하시겠습니까?')) {
 						this.checkId(event);
-						this.movedEvent(event.title, startTime, endTime, id);
+						this.movedEvent(event);
 						} else {
 							revertFunc();
 						}
@@ -305,9 +342,6 @@ class FullCalendar extends React.Component {
 				},
 
 				eventResize: (event, delta, revertFunc) => {
-					const startTime = event.start.format('HH:mm');
-					const date = event.start.format('YYYY-MM-DD');
-					const endTime = event.start.format('YYYY-MM-DD') + 'T' + event.end._i[3]+ ':' +event.end._i[4];
 					if(confirm('시간을 변경 하시겠습니까?')) {
 						this.checkId(event);
 						this.setState({
@@ -315,12 +349,12 @@ class FullCalendar extends React.Component {
 								{
 									id: event.id,
 									title : event.title,
-									start : event.start.format('YYYY-MM-DD HH:mm'),
-									end : endTime
+									start : event.start.format(),
+									end : event.end.format()
 								}
 							)
 						})
-						this.nowEvent(event, date, startTime, endTime);
+						this.nowEvent(event);
 					} else {
 						revertFunc();
 					}
@@ -347,7 +381,7 @@ class FullCalendar extends React.Component {
 		shouldComponentUpdate(nextProps, nextState) {
 			let result = false;
 			if (this.state.submit !== nextState.submit) {
-				this.calendarView.removeEvents(event);
+				this.calendarView.removeEventSources(event);
 				this.calendarView.addEventSource(nextState.events);
 				result = true;
 			}
