@@ -4,9 +4,13 @@
 import React from 'react';
 import $ from 'jquery';
 import { Calendar } from 'fullcalendar';
-import 'moment/locale/ko';
-
 import { Button, Modal, ModalHeader, ModalBody, ModalFooter } from 'reactstrap';
+
+import 'moment/locale/ko';
+import moment from "moment";
+import DatePicker from "react-datepicker";
+
+import "react-datepicker/dist/react-datepicker.css";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '../node_modules/fullcalendar/dist/fullcalendar.min.css';
 
@@ -15,6 +19,7 @@ class FullCalendar extends React.Component {
 		constructor(props) {
 			super(props);
     	this.state = {
+				viewDatePicker: moment(),
 				submit: false,
 				modal: false,
 				events: [
@@ -45,6 +50,7 @@ class FullCalendar extends React.Component {
 			this.removeEvent = this.removeEvent.bind(this);
 			this.addEvent = this.addEvent.bind(this);
 			this.inputHandler = this.inputHandler.bind(this);
+			this.dateHandler = this.dateHandler.bind(this);
 		}
 		
 		submit() {
@@ -64,18 +70,7 @@ class FullCalendar extends React.Component {
 			const id = this.state.events.map(event => event.id);
 			const maxId = this.state.events.length === 0 ? 1 : Math.max(...id) + 1;
 
-			if (e.target.id === 'inputDate') { 
-				const inputDate = e.target.value;
-				this.setState({
-					nowEvent: {
-						id: this.state.nowEvent.id,
-						date: inputDate,
-						title: this.state.nowEvent.title,
-						start: inputDate + this.state.nowEvent.startTime,
-						end: inputDate + this.state.nowEvent.endTime
-					}
-				})
-			} else if (e.target.id === 'inputName') { 
+			if (e.target.id === 'inputName') { 
 				const inputName = e.target.value;
 				this.setState({
 					nowEvent: {
@@ -120,6 +115,22 @@ class FullCalendar extends React.Component {
 					}
 				})
 			}
+		}
+
+		dateHandler(date) {
+			this.setState({
+					nowEvent: {
+						id: this.state.nowEvent.id,
+						title: this.state.nowEvent.title,
+						start: date.format('YYYY-MM-DDT'+this.state.nowEvent.startTime),
+						date: date.format('YYYY-MM-DD'),
+						startTime: this.state.nowEvent.startTime,
+						endTime: this.state.nowEvent.endTime,
+						end: date.format('YYYY-MM-DDT'+this.state.nowEvent.endTime)
+					},
+					viewDatePicker: date
+			})
+			this.submit();
 		}
 		
 		movedEvent(event) {
@@ -245,14 +256,14 @@ class FullCalendar extends React.Component {
 							<div id="modalView">
         			<Modal isOpen={this.state.modal} toggle={this.toggle}>
 								<ModalHeader> 
-									<label htmlFor="inputDate" className="col-form-label">날짜</label>
-									<input type="text" className="form-control" id="inputDate" onChange={this.inputHandler} placeholder="ex)2018-10-13" defaultValue={this.state.nowEvent.date} />
+									<label htmlFor="inputDate" className="col-form-label">날짜</label><br/>
+									<DatePicker placeholderText={this.state.nowEvent.date} selected={this.state.startDate} onChange={this.dateHandler} dateFormat="LL"/><br/>
 									<label htmlFor="inputName" className="col-form-label">오피스명</label>
             			<input type="text" className="form-control" id="inputName" onChange={this.inputHandler} defaultValue={this.state.nowEvent.title} />
 								</ModalHeader>
           		  <ModalBody>
 									<p className="font-weight-bold">상담시간</p>
-									<label htmlFor="startTime" className="col-form-label">시작시간</label>
+									<label htmlFor="startTime" className="col-form-label">시작시간</label><br/>
             			<input type="text" className="form-control" id="startTime" onChange={this.inputHandler} placeholder="ex)13:00" defaultValue={this.state.nowEvent.startTime} />
 									<label htmlFor="endTime" className="col-form-label">종료시간</label>
             			<input type="text" className="form-control" id="endTime" onChange={this.inputHandler} placeholder="ex)16:00" defaultValue={this.state.nowEvent.endTime}/>
