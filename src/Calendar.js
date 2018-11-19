@@ -7,7 +7,6 @@ import { Calendar } from 'fullcalendar';
 import { Button, Modal, ModalHeader, ModalBody, ModalFooter } from 'reactstrap';
 
 import 'moment/locale/ko';
-import moment from "moment";
 import DatePicker from "react-datepicker";
 
 import "react-datepicker/dist/react-datepicker.css";
@@ -19,21 +18,35 @@ class FullCalendar extends React.Component {
 		constructor(props) {
 			super(props);
     	this.state = {
-				viewDatePicker: moment(),
 				submit: false,
 				modal: false,
 				events: [
 					{
 						id: 1,
 						title: '테헤란로',
+						date: "2018-11-14",
 						start: "2018-11-14T10:00",
-						end: "2018-11-14T14:00"
+						end: "2018-11-14T13:00",
+						startTime: "10:00",
+						endTime: "13:00"
 					},
 					{
 						id: 2,
 						title: '강남구',
-						start: "2018-11-07T15:00",
-						end: "2018-11-07T20:00"
+						date: "2018-11-19",
+						start: "2018-11-19T19:00",
+						end: "2018-11-19T20:30",
+						startTime: "19:00",
+						endTime: "20:30"
+					},
+					{
+						id: 3,
+						title: '매직킹덤빌딩',
+						date: "2018-11-07",
+						start: "2018-11-07T09:00",
+						end: "2018-11-07T11:30",
+						startTime: "09:00",
+						endTime: "11:30"
 					},
 				],
 				nowEvent: {
@@ -49,8 +62,10 @@ class FullCalendar extends React.Component {
 			this.toggle = this.toggle.bind(this);
 			this.removeEvent = this.removeEvent.bind(this);
 			this.addEvent = this.addEvent.bind(this);
-			this.inputHandler = this.inputHandler.bind(this);
+			this.inputName = this.inputName.bind(this);
 			this.dateHandler = this.dateHandler.bind(this);
+			this.startTimeHandler = this.startTimeHandler.bind(this);
+			this.endTimeHandler = this.endTimeHandler.bind(this);
 		}
 		
 		submit() {
@@ -66,55 +81,22 @@ class FullCalendar extends React.Component {
 			this.submit();
 		}
 
-		inputHandler(e) {
+		inputName(e) {
 			const id = this.state.events.map(event => event.id);
 			const maxId = this.state.events.length === 0 ? 1 : Math.max(...id) + 1;
+			const inputName = e.target.value;
 
-			if (e.target.id === 'inputName') { 
-				const inputName = e.target.value;
-				this.setState({
-					nowEvent: {
-						id: maxId,
-						date: this.state.nowEvent.date,
-						title: inputName,
-						start: this.state.nowEvent.start,
-						end: this.state.nowEvent.end
-					}
-				})
-			} else if (e.target.id === 'startTime') { 
-				const startTime = e.target.value
-				this.setState({
-					nowEvent: {
-						id: this.state.nowEvent.id,
-						date: this.state.nowEvent.date,
-						title: this.state.nowEvent.title,
-						start: this.state.nowEvent.date + 'T' + startTime,
-						end: this.state.nowEvent.end
-					}
-				})
-			} else if (e.target.id === 'endTime') { 
-				const endTime = e.target.value
-				this.setState({
-					nowEvent: {
-						id: this.state.nowEvent.id,
-						title: this.state.nowEvent.title,
-						date: this.state.nowEvent.date,
-						start: this.state.nowEvent.start,
-						end: this.state.nowEvent.date + 'T' + endTime
-					}
-				})
-			} else {
-				this.setState({
-					nowEvent: {
-						title: '',
-						date: '',
-						start: '',
-						end: '',
-						startTime: '',
-						endTime: ''
-					}
-				})
-			}
+			this.setState({
+				nowEvent: {
+					id: maxId,
+					title: inputName,
+					date: this.state.nowEvent.date,
+					start: this.state.nowEvent.start,
+					end: this.state.nowEvent.end,
+					startTime: this.state.nowEvent.startTime,
+					endTime: this.state.nowEvent.endTime
+				}
+			})
 		}
 
 		dateHandler(date) {
@@ -122,15 +104,44 @@ class FullCalendar extends React.Component {
 					nowEvent: {
 						id: this.state.nowEvent.id,
 						title: this.state.nowEvent.title,
-						start: date.format('YYYY-MM-DDT'+this.state.nowEvent.startTime),
 						date: date.format('YYYY-MM-DD'),
+						start: date.format('YYYY-MM-DDT'+this.state.nowEvent.startTime),
+						end: date.format('YYYY-MM-DDT'+this.state.nowEvent.endTime),
 						startTime: this.state.nowEvent.startTime,
-						endTime: this.state.nowEvent.endTime,
-						end: date.format('YYYY-MM-DDT'+this.state.nowEvent.endTime)
+						endTime: this.state.nowEvent.endTime
 					},
-					viewDatePicker: date
 			})
 			this.submit();
+		}
+
+		startTimeHandler(date) {
+			this.setState({
+				nowEvent: {
+					id: this.state.nowEvent.id,
+					title: this.state.nowEvent.title,
+					date: this.state.nowEvent.date,
+					start: this.state.nowEvent.date + 'T' + date.format('HH:mm'),
+					end: this.state.nowEvent.end,
+					startTime: date.format('HH:mm'),
+					endTime: this.state.nowEvent.endTime
+				},
+		})
+		this.submit();
+		}
+
+		endTimeHandler(date) {
+			this.setState({
+				nowEvent: {
+					id: this.state.nowEvent.id,
+					title: this.state.nowEvent.title,
+					date: this.state.nowEvent.date,
+					start: this.state.nowEvent.start,
+					end: this.state.nowEvent.date + 'T' + date.format('HH:mm'),
+					startTime: this.state.nowEvent.startTime,
+					endTime: date.format('HH:mm')
+				},
+		})
+		this.submit();
 		}
 		
 		movedEvent(event) {
@@ -145,33 +156,60 @@ class FullCalendar extends React.Component {
 				)
 			})
 			this.submit();
-			console.log(this.state.events);
 		}
 		
+		// 중복일정 체크함수 수정중
+		// checkDuration(checkDate) {
+		// 	const checkDateTime = this.state.events.filter((event) => checkDate === event.date);
+
+		// 	const eventStartTime = checkDateTime.map((event) => { return event.startTime });
+		// 	const eventEndTime = checkDateTime.map((event) => { return event.endTime });
+			
+		// 	const checkTime = eventEndTime.find((event) => {	return event < this.state.nowEvent.startTime; });
+		// 	const checkLastTime = eventStartTime.find((event) => { return event > this.state.nowEvent.endTime; });
+
+		// 		if (!checkTime && !checkLastTime) {
+		// 			alert('중복되는 일정이 있습니다.');
+		// 			return;
+		// 		}
+		// 	} 
+
 		addEvent() {
+			if(!this.state.nowEvent.title) {
+				alert('오피스명을 입력해주세요.');
+				return;
+			} else if(this.state.nowEvent.startTime >= this.state.nowEvent.endTime){
+				alert('종료시간이 더 이를 수 없습니다.');
+				return;
+			}
+
 			const id = this.state.events.map(event => event.id);
 			const checkId = this.state.events.map(event => event.id).indexOf(this.state.nowEvent.id);
 			const maxId = this.state.events.length === 0 ? 1 : checkId === -1 ? Math.max(...id) + 1 : this.state.nowEvent.id;
 			
 			if(checkId !== -1) {
 				const newEvent = this.state.events.filter((event) => { return event.id !== this.state.nowEvent.id; });
-				console.log(newEvent);
 				this.calendarView.removeEventSources(event);
 				this.setState({ 
 					events: newEvent.concat(
 						{
 							id: this.state.nowEvent.id,
+							date: this.state.nowEvent.date,
 							title: this.state.nowEvent.title,
 							start: this.state.nowEvent.start,
-							end: this.state.nowEvent.end
+							end: this.state.nowEvent.end,
+							startTime: this.state.nowEvent.startTime,
+							endTime: this.state.nowEvent.endTime
 						}
 					),
 					nowEvent: {
 						id: '',
+						date: '',
 						title: '',
 						start: '',
-						date: '',
-						end: ''
+						end: '',
+						startTime: '',
+						endTime: ''
 					}
 				});
 				this.calendarView.addEventSource(this.state.events);
@@ -180,17 +218,22 @@ class FullCalendar extends React.Component {
 					events: this.state.events.concat(
 						{
 							id: maxId,
+							date: this.state.nowEvent.date,
 							title: this.state.nowEvent.title,
 							start: this.state.nowEvent.start,
-							end: this.state.nowEvent.end
+							end: this.state.nowEvent.end,
+							startTime: this.state.nowEvent.startTime,
+							endTime: this.state.nowEvent.endTime
 						}
 					),
 					nowEvent: {
 						id: '',
+						date: '',
 						title: '',
 						start: '',
-						date: '',
-						end: ''
+						end: '',
+						startTime: '',
+						endTime: ''
 					}
 				})
 			}
@@ -257,16 +300,14 @@ class FullCalendar extends React.Component {
         			<Modal isOpen={this.state.modal} toggle={this.toggle}>
 								<ModalHeader> 
 									<label htmlFor="inputDate" className="col-form-label">날짜</label><br/>
-									<DatePicker placeholderText={this.state.nowEvent.date} selected={this.state.startDate} onChange={this.dateHandler} dateFormat="LL"/><br/>
+										<DatePicker placeholderText={this.state.nowEvent.date} onChange={this.dateHandler} dateFormat="LL"/><br/>
 									<label htmlFor="inputName" className="col-form-label">오피스명</label>
-            			<input type="text" className="form-control" id="inputName" onChange={this.inputHandler} defaultValue={this.state.nowEvent.title} />
+            				<input type="text" className="form-control" id="inputName" onChange={this.inputName} defaultValue={this.state.nowEvent.title} />
 								</ModalHeader>
           		  <ModalBody>
 									<p className="font-weight-bold">상담시간</p>
-									<label htmlFor="startTime" className="col-form-label">시작시간</label><br/>
-            			<input type="text" className="form-control" id="startTime" onChange={this.inputHandler} placeholder="ex)13:00" defaultValue={this.state.nowEvent.startTime} />
-									<label htmlFor="endTime" className="col-form-label">종료시간</label>
-            			<input type="text" className="form-control" id="endTime" onChange={this.inputHandler} placeholder="ex)16:00" defaultValue={this.state.nowEvent.endTime}/>
+										<DatePicker showTimeSelect showTimeSelectOnly placeholderText={this.state.nowEvent.startTime} onChange={this.startTimeHandler} timeFormat="HH:mm" timeCaption="시작시간"/> ~ 
+										<DatePicker showTimeSelect showTimeSelectOnly placeholderText={this.state.nowEvent.endTime} onChange={this.endTimeHandler} timeFormat="HH:mm" timeCaption="종료시간"/><br/>
           			</ModalBody>
           			<ModalFooter>
             			<Button color="secondary" onClick={this.toggle}>취소</Button>
@@ -312,10 +353,7 @@ class FullCalendar extends React.Component {
 				},
 				customButtons: {
 					addEventButton: {
-						text: '상담 추가',
-						click: function() {
-							console.log('click button');
-						}
+						text: '상담 추가'
 					}
 				},
 				header: {
@@ -360,8 +398,11 @@ class FullCalendar extends React.Component {
 								{
 									id: event.id,
 									title : event.title,
+									date: event.start.format('YYYY-MM-DD'),
 									start : event.start.format(),
-									end : event.end.format()
+									end : event.end.format(),
+									startTime: event.start.format('HH:mm'),
+									endTime: event.end.format('HH:mm')
 								}
 							)
 						})
@@ -377,9 +418,11 @@ class FullCalendar extends React.Component {
 						nowEvent: {
 							id: '',
 							title: '',
+							date: date.format('YYYY-MM-DD'),
 							start: '',
-							date: date.format(),
-							end: ''
+							end: '',
+							startTime: '',
+							endTime: ''
 						}
 					})
 					this.submit();
