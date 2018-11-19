@@ -175,11 +175,12 @@ class FullCalendar extends React.Component {
 		// 	} 
 
 		addEvent() {
-			if(!this.state.nowEvent.title) {
+			const strSpaceCheck = /^[\s]+/g;
+			if(!this.state.nowEvent.title || this.state.nowEvent.title.match(strSpaceCheck)) {
 				alert('오피스명을 입력해주세요.');
 				return;
 			} else if(this.state.nowEvent.startTime >= this.state.nowEvent.endTime){
-				alert('종료시간이 더 이를 수 없습니다.');
+				alert('시간이 잘못 지정되었습니다.');
 				return;
 			}
 
@@ -244,7 +245,12 @@ class FullCalendar extends React.Component {
 		removeEvent() {
 			const newEvent = this.state.events.filter((event) => {
 					return event.id !== this.state.nowEvent.id;
-				});
+				})
+			if (this.state.events.length === newEvent.length) {
+				alert('삭제할 일정이 없습니다.');
+				return;
+			}
+
 			const remove = confirm('일정을 삭제하시겠습니까?');
 			if(remove) {
 				this.calendarView.removeEventSources(event);
