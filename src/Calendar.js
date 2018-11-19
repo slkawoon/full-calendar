@@ -68,6 +68,14 @@ class FullCalendar extends React.Component {
 			this.endTimeHandler = this.endTimeHandler.bind(this);
 		}
 		
+		checkId(e) {
+			this.setState({
+				events : this.state.events.filter((event) => {
+					return e.id !== event.id;
+				})
+			});
+		}
+		
 		submit() {
 			this.setState({
 				submit: !this.state.submit
@@ -157,22 +165,6 @@ class FullCalendar extends React.Component {
 			})
 			this.submit();
 		}
-		
-		// 중복일정 체크함수 수정중
-		// checkDuration(checkDate) {
-		// 	const checkDateTime = this.state.events.filter((event) => checkDate === event.date);
-
-		// 	const eventStartTime = checkDateTime.map((event) => { return event.startTime });
-		// 	const eventEndTime = checkDateTime.map((event) => { return event.endTime });
-			
-		// 	const checkTime = eventEndTime.find((event) => {	return event < this.state.nowEvent.startTime; });
-		// 	const checkLastTime = eventStartTime.find((event) => { return event > this.state.nowEvent.endTime; });
-
-		// 		if (!checkTime && !checkLastTime) {
-		// 			alert('중복되는 일정이 있습니다.');
-		// 			return;
-		// 		}
-		// 	} 
 
 		addEvent() {
 			const strSpaceCheck = /^[\s]+/g;
@@ -192,8 +184,7 @@ class FullCalendar extends React.Component {
 				const newEvent = this.state.events.filter((event) => { return event.id !== this.state.nowEvent.id; });
 				this.calendarView.removeEventSources(event);
 				this.setState({ 
-					events: newEvent.concat(
-						{
+					events: newEvent.concat({
 							id: this.state.nowEvent.id,
 							date: this.state.nowEvent.date,
 							title: this.state.nowEvent.title,
@@ -201,8 +192,7 @@ class FullCalendar extends React.Component {
 							end: this.state.nowEvent.end,
 							startTime: this.state.nowEvent.startTime,
 							endTime: this.state.nowEvent.endTime
-						}
-					),
+						}),
 					nowEvent: {
 						id: '',
 						date: '',
@@ -284,14 +274,6 @@ class FullCalendar extends React.Component {
 					end: event.end.format()
 				}
 			})
-		}
-
-		checkId(event) {
-			this.setState({
-				events : this.state.events.filter((_event) => {
-					return event.id !== _event.id;
-				})
-			});
 		}
 		
     render() {
